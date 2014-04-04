@@ -1,0 +1,18 @@
+################################################################################
+#  Getting to Know the Environment
+################################################################################
+
+In the first lab of the term you will have verified access to WOPR and the workstations in the lab. You will also have checked out this repository and compiled a HelloWorld application in each of the three languages.
+
+Your grade on this lab is based on emailing a URL to use to checkout your fork of the central git repository.
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Check out the repository onto WOPR, ACISS, or mist
+git clone http://www.cs.uoregon.edu/Classes/14S/cis410parallel/repo.git
+
+2. Run the Makefile and look at the source code and output of each of the programs.
+
+3. Initialize a git repo somewhere we can pull from (could be your home directory on WOPR, ACISS, mist, ix) and email the URL we should use for the pull to the GTFs.

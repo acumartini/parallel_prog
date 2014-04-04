@@ -1,0 +1,19 @@
+################################################################################
+#  Looking at debugging
+################################################################################
+
+In the second lab of the term you will be looking at 3 broken programs and fixing 2 of them.
+
+Your grade on this lab is based on having fixed versions of those 2 programs in your repository.
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Pull the start files from the git repository
+Change directory to your personal git repository
+git pull
+
+2. Fix the programs, editing the files we give you
+
+3. Due date is not the end of lab, it is due by next Wednesday
