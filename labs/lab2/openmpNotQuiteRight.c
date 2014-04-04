@@ -18,7 +18,11 @@ int main()
    //intended behavior   : a[i] gets the sum of its value and its right neighbor's value.
    //observed behavior   : Not the intended behavior at all. Oops.
    //If only we had some developers to fix this for us.
-   #pragma omp parallel for
+
+   // There are no dependencies in the iterations!
+   // Can fix this with ordering, but then it's serial again.  But we can find an itelligent 
+   // decomposition can increase the total work load, but this work can also be parallelized.
+   #pragma omp for
    for(i=1;i<=ARRAYSIZE;i++)
    {
       a[i]=a[i]+a[((i-1)%ARRAYSIZE)];
