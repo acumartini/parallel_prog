@@ -1,0 +1,21 @@
+################################################################################
+#  TAU
+################################################################################
+
+In the third lab of the term you will be using TAU to generate some performance profiling data.
+
+Your grade on this lab is based on having checked in the profiles generated from using TAU on tautest and a text file "readme.txt" containing insights you gained from looking at the performance data (not more than a paragraph).
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Pull the start files from the git repository
+Change directory to your personal git repository
+git pull
+
+2. Compile and run with TAU
+
+3. Look at the profile data and write a paragraph about what you see in the data.
+
+4. Due date is not the end of lab, it is due by 4/16. We will grade by cloning your repository and looking for the profile and readme.txt files.
