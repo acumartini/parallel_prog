@@ -1,0 +1,6 @@
+The computation time for each Thread increases because the private variable "threadNum" 
+is passed to the doComputation(), which increase the time spend computing the value.
+This leads to a load imbalance where the program must wait for the longest thread to
+finish before moving continuing. Therefore, Thread 4 becomes a dependency that limits
+performance. 
+
