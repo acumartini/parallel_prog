@@ -1,0 +1,56 @@
+################################################################################
+#  VTune
+################################################################################
+
+In the fourth lab of the term you will be using Intel's VTune Amplefier XE performance analysis tool to generate performance profiling data.
+
+
+Your grade on this lab is based on having checked in the modified source code for the tachyon example.
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Get lab4 from the class git repository (git pull).
+
+2. Run 'module load intel' and 'module load tau', and then run 'make' in both the tachyon/ and tauTest/ directories. 
+
+3. Run 'amplxe-gui' to launch the VTune gui program.
+ 
+4. Click 'new project', enter a project name.
+
+5. The target type field should be 'Launch Application', then select the binary 'lab4/tauTest/tauTest' for the 'Application' field.
+
+6. Under Current Project, there should be a link for 'New Analysis...'. Click this.
+
+7. On the left panel, 'Basic Hotspots' should be selected. Then click the 'Start' button on the right.
+
+8. VTune will analyze the performance of the code you used from last week. Feel free to explore VTune. The 'Summary' and 'Bottom-up' tabs at the top have lots of cool information. 
+
+9. Now we will look at bigger applications. At the very top of the GUI is a panel of buttons. Click the 'New Project' button.
+
+10. Give your new project a name and location. The target type should still be 'Launch Application'. Select the 'tachyon_find_hotspots' binary in the lab4/tachyon/ directory.
+
+11. Click the 'New Analysis' link again. 'Basic Hotspots' should be selected on the left, then click 'Start' on the right.
+
+12. A ray tracing visual will be displayed. Again, feel free to look around after the computation is complete. When you're ready, go to the Bottom-up panel.
+
+13. Observe that the 'initialize_2D_buffer' function gives us poor CPU time. Double click that function to bring up the source code for it.
+
+14. We can see the source code lines where our program is spending the most time. Read through the comments in the source code and comment/uncomment code so that this program will run faster. 
+
+15. When you are ready, run 'make clean; make' in the tachyon directory to rebuild our source code. Then go back to the VTune GUI and click the orange arrow in the panel of buttons at the top of the window to run a new analysis. Our performance should be better this time. 
+
+16. Now we will do the same thing from steps 9 - 15, but with the other executable in the tachyon/ directory, 'tachyon_analyze_locks'. Instead of selecting 'Basic Hotspots', select 'Locks and Waits', then 'Start'.
+
+17. On the timeline at the bottom of the 'Bottom-up' page, be sure the yellow transitions box is checked. This will allow us to see the execution flow from one thread to another. Feel free to play with the timeline. If you zoom in, you can see the execution path between threads.
+
+18. Observe that the Mutex object gives us poor CPU time. Open up the source code for it to examine it. 
+
+19. Because we're not trying to teach you about ray tracing, we will give you a hint. The mutexes are not needed for this computation. Comment them out, rebuild the source code, and reanalyze the program to see what happens. 
+
+20. There is also a 'Compare' button at the top of the GUI window. Give it a try!
+
+21. The modified source code should be submitted for grading. Commit it to your personal repo. The due date is 4/18.
+
+ Due date is not the end of lab, it is due by 4/16. We will grade by cloning your repository and looking for the profile and readme.txt files.
