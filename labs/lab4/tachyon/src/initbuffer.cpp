@@ -107,10 +107,10 @@ int iteration_count(0);
 /*****************************************
         // First (slower) method of filling array
         // Array is NOT filled in consecutive memory address order
-        /**********************************/
+        /**********************************
         for (int i = 0; i < mem_array_i_max; i++)
         {
-/************************/
+/************************
 // Try to defeat hardware prefetching by varying the stride
 int j(0), iteration_count(0);
 
@@ -141,7 +141,7 @@ int iteration_count(0);
         // Faster method of filling array
         // The for loops are interchanged
         // Array IS filled in consecutive memory address order
-        /**********************************
+        /**********************************/
         for (int j = 0; j < mem_array_j_max; j++)
         {
                 for (int i = 0; i < mem_array_i_max; i++)

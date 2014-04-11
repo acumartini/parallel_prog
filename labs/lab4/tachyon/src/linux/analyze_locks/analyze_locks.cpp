@@ -162,14 +162,14 @@ public:
 			drawing_area drawing(startx, totaly-y, stopx-startx, 1);
 
 			// Acquire mutex to protect pixel calculation from multithreaded access (Needed?)
-			pthread_mutex_lock (&rgb_mutex);
+			// pthread_mutex_lock (&rgb_mutex);
 			for (int x = startx; x < stopx; x++) {
 				color_t c = render_one_pixel (x, y, local_mbox, serial, startx, stopx, starty, stopy);
 				drawing.put_pixel(c);
 			}
 
 			// Release the mutex after pixel calculation complete
-			pthread_mutex_unlock (&rgb_mutex);
+			// pthread_mutex_unlock (&rgb_mutex);
 
 			if(!video->next_frame()) tbb::task::self().cancel_group_execution();
 		}
