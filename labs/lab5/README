@@ -1,0 +1,27 @@
+################################################################################
+#  Map Pattern
+################################################################################
+
+As you learned in lecture, the map pattern is one in which an operation is performed independently on a elements in a collection in parallel
+
+################################################################################
+#  Problem Statement
+################################################################################
+
+OSNAP Executives need a tool to recover their PIN from the associated hash. You will write a program to do so in each of the three technologies.
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Check out the repository onto WOPR, ACISS, or mist
+
+git pull <teacher repo remote> master
+
+2. Run the Makefile and look at the source code and output of each of the programs.
+
+3. Write a parallel version of the program in Cilk, TBB, and OpenMP.
+
+4. Update the Makefile entries for the other three build targets with compilation commands for source files.
+
+5. Commit the source files and updated Makefile to your repository.

@@ -1,0 +1,11 @@
+echo -n "Attempting to descramble 00000000, hash is "
+cat keys/00000000
+./pass_init `cat keys/00000000`
+
+echo -n "Attempting to descramble 00001000, hash is "
+cat keys/00001000
+./pass_init `cat keys/00001000`
+
+echo -n "Attempting to descramble 01000000, hash is "
+cat keys/01000000
+./pass_init `cat keys/01000000`
