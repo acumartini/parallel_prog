@@ -24,7 +24,8 @@ void encode(char* plainText, char* cypherText, xorKey* keyList, int ptextlen, in
   int keyLoop=0;
   int charLoop=0;
   for(charLoop=0;charLoop<ptextlen;charLoop++) {
-    char cipherChar=plainText[charLoop]; 
+    char cipherChar=plainText[charLoop];
+    #pragma omp parallel for reduction(^:cipherChar) 
     for(keyLoop=0;keyLoop<numKeys;keyLoop++) {
        cipherChar=cipherChar ^ getBit(&(keyList[keyLoop]),charLoop);
     }

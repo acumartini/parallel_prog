@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
     int threadNum=0;
     long currpass=0;
     
-    #pragma omp parallel for schedule(dynamic) private(threadNum, currpass, passmatch)   
+    #pragma omp parallel for private(threadNum, currpass, passmatch)   
     for ( currpass=0; currpass <= SEARCH_SPACE; ++currpass ) {
         if (notfound != 0) {
             genpass(currpass,passmatch);
