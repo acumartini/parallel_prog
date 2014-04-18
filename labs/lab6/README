@@ -1,0 +1,29 @@
+################################################################################
+#  Collective Pattern
+################################################################################
+
+As you learned in lecture, the collective pattern is one in which an operation is performed to reduce a collection of elements in parallel
+
+################################################################################
+#  Problem Statement
+################################################################################
+
+OSNAP has and handles a large amount of sensitive data. Some of the data is classified such that only specific sets of people should be able to access and the data should only be accessed when all of them are present (eg. alien autopsy footage). 
+
+Our security consultants have devised an XOR based encryption strategy to support the requirements and have provided a serial reference implementation. XOR is associative and commutative, so there may be an opportunity to improve performance with a parallel collective. OSNAP needs parallel implementations to conduct performance studies with.
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Check out the repository onto WOPR, ACISS, or mist
+
+git pull <teacher repo remote> master
+
+2. Run the Makefile and look at the source code and output of each of the program.
+
+3. Write a parallel version of the program in Cilk, TBB, and OpenMP.
+
+4. Update the Makefile entries for the other three build targets with compilation commands for source files.
+
+5. Commit the source files and updated Makefile to your repository.
