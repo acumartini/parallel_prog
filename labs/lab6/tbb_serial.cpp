@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <functional>
+
+#include <tbb/tbb.h>
+#include "tbb/parallel_reduce.h"
+#include "tbb/blocked_range.h"
 
 // utility function: given a list of keys, a list of files to pull them from, 
 // and the number of keys -> pull the keys out of the files, allocating memory 
@@ -21,23 +26,26 @@ void getKeys(xorKey* keyList, char** fileList, int numKeys)
 }
 //Given text, a list of keys, the length of the text, and the number of keys, encodes the text
 void encode(char* plainText, char* cypherText, xorKey* keyList, int ptextlen, int numKeys) {
-  int keyLoop=0;
-  int charLoop=0;
   
-  for(charLoop=0;charLoop<ptextlen;charLoop++) {
-    char cipherChar = plainText[charLoop];
-    cipherChar = cipherChar ^ parallel_reduce(
-        blocked_range<int>( 0, numKeys ),
-        char(0),
-        [](const blocked_range<int>& r, char in )->char {
-            for( int a=r.begin(); a!=r.end(); ++a ) 
-                in = in ^ getBit(&(keyList[a]),charLoop);
-            return in;
-        },
-        std::bit_xor<char>()
-    );
-    cypherText[charLoop]=cipherChar;
-  }
+  tbb::parallel_for (
+    tbb::blocked_range<int> ( 0, ptextlen ),
+    [=](tbb::blocked_range<int> r) { 
+        for( int charLoop = r.begin(); charLoop < r.end(); ++charLoop ) {
+            char cipherChar = plainText[charLoop];
+            char res = tbb::parallel_reduce(
+                tbb::blocked_range<int>( 0, numKeys ),
+                char(0),
+                [=]( const tbb::blocked_range<int>& r, char in )->char {
+                    for( int a=r.begin(); a!=r.end(); ++a ) 
+                        in = in ^ getBit( &(keyList[a]), charLoop );
+                    return in;
+                },
+                std::bit_xor<char>()
+            );
+            cipherChar = cipherChar ^ res;
+            cypherText[charLoop]=cipherChar;
+        }
+  });
 }
 
 void decode(char* cypherText, char* plainText, xorKey* keyList, int ptextlen, int numKeys) {
