@@ -23,12 +23,19 @@ void getKeys(xorKey* keyList, char** fileList, int numKeys)
 void encode(char* plainText, char* cypherText, xorKey* keyList, int ptextlen, int numKeys) {
   int keyLoop=0;
   int charLoop=0;
+  
   for(charLoop=0;charLoop<ptextlen;charLoop++) {
-    char cipherChar=plainText[charLoop];
-     
-    for(keyLoop=0;keyLoop<numKeys;keyLoop++) {
-       cipherChar=cipherChar ^ getBit(&(keyList[keyLoop]),charLoop);
-    }
+    char cipherChar = plainText[charLoop];
+    cipherChar = cipherChar ^ parallel_reduce(
+        blocked_range<int>( 0, numKeys ),
+        char(0),
+        [](const blocked_range<int>& r, char in )->char {
+            for( int a=r.begin(); a!=r.end(); ++a ) 
+                in = in ^ getBit(&(keyList[a]),charLoop);
+            return in;
+        },
+        std::bit_xor<char>()
+    );
     cypherText[charLoop]=cipherChar;
   }
 }
