@@ -1,0 +1,1 @@
+This should be replaced by a description of the data reorganization you chose to implement and its effectiveness. Your description can be short, but should address the change made and why you expected a performance improvement. You should also include performance metrics to support wether runtime improved or not.

@@ -1,0 +1,31 @@
+################################################################################
+#  Data Reorganization Pattern
+################################################################################
+
+Data locality with respect to space and time can have large impacts on runtime performance. In this lab you will apply the Data Reorganization pattern, possibly in addition to other parallel patterns, to improve runtime performance.
+
+################################################################################
+#  Problem Statement
+################################################################################
+
+Following the public release of the HeartBleed exploit against OpenSSL, OSNAP executive management no longer trusts software written and maintained by outside development organizations. A large number of OSNAP projects require efficient linear algebra code. 
+
+In this lab, you are to improve the performance of the matrix multiplication code using data reorganization. You may need to modify the algorithm and/or add additional logic to move the data. Performance measurement should only be done for the actual multiply logic. Time spent outside of the matrix_multiply function need not be measured.
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Check out the repository onto WOPR, ACISS, or mist
+
+git pull <teacher repo remote> master
+
+2. Run the Makefile and look at the source code and output of the program
+
+3. Write a parallel version of the program in Cilk, TBB, or OpenMP. You may implement in all 3 technologies but only one implementation is required.
+
+4. Give us a paragraph on your data reorganization, why you thought it would help, and whether it actually helped in datareorg.txt
+
+5. Update the Makefile entries for your build targets with compilation commands for source files.
+
+6. Commit the source files and updated Makefile to your repository.
