@@ -1,1 +1,7 @@
-This should be replaced by a description of the data reorganization you chose to implement and its effectiveness. Your description can be short, but should address the change made and why you expected a performance improvement. You should also include performance metrics to support wether runtime improved or not.
+I chose to reorganize the data by transposing the B vector to improve cache line efficiency.  Because c++ uses row-major order, the data of a 2D array is stored in a 1D array by appending rows.  This means that any iteration in over columns can introduce caching inefficiencies. Transposing B allows B to be iterated over in a row-mojor fashion in the final loop.
+
+Parallelization increases performance by istelf if you only iterate over, and add parallism to, the first two for loops.  However, if you add a "parallel for" to the final loop over k, performance drops significantly.  This issue is fixed by transposing B and switching the index order so that k is iterating in a row-major fashion.
+
+Using arrays with ORDER 4000:
+    Time with parallel for over k with naive indexing: 103s
+    Time with parallel for over k with data reorganization: 21s 
