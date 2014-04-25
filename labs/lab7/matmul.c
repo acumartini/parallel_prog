@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <omp.h>
-#include <algorithm> 
 
 #define ORDER 2000   // the order of the matrix
 #define AVAL  3.0    // initial value of A
@@ -65,11 +64,19 @@ void print_matrix( double matrix[][ORDER] )
 }
 
 void transpose(double M1[][ORDER], double Mnew[][ORDER]) {
-    //#pragma omp parallel for
+    #pragma omp parallel for
     for(int i=0; i<ORDER; i++) {
         for(int j=0; j<ORDER; j++) {
-        	// printf("M1[%d][%d]=%lf\n", i, j, M1[i][j]);
             Mnew[j][i] = M1[i][j];
+        }
+    }
+}
+
+void copy(double M1[][ORDER], double M2[][ORDER]) {
+    #pragma omp parallel for
+    for(int i=0; i<ORDER; i++) {
+        for(int j=0; j<ORDER; j++) {
+            M2[i][j] = M1[i][j];
         }
     }
 }
@@ -83,7 +90,7 @@ double matrix_multiply(void) {
 	// print_matrix( B );
 	double B_[ORDER][ORDER];
 	transpose(B, B_);
-	std::copy(&B_[0][0], &B_[0][0]+P*M, &B[0][0]);
+	copy(B_, B);
 	// printf("\n");
 	// print_matrix( B );
 
@@ -95,7 +102,7 @@ double matrix_multiply(void) {
 	// B is now in "column-major" order, so re-order the idexing
 	#pragma omp parallel for private(i,j,k)
 	for (i=0; i<N; i++){
-		#pragma omp parallel for private(j,k)
+		//#pragma omp parallel for private(j,k)
 		for (j=0; j<M; j++){
 			// #pragma omp parallel for
 			for(k=0; k<P; k++){
