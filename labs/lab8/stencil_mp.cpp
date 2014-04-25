@@ -59,13 +59,13 @@ void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pix
     //double outIntensity[rows*cols];
     
     // initialize edge arrays    
-	double Xedges[rows*cols];
+	double *Xedges = (double *) malloc(rows * cols * sizeof(double));
 	for(int i = 0; i < rows * cols; ++i) {
 		Xedges[i] = 0.0;
 	}
-	double Yedges[rows*cols];
+	double *Yedges = (double *) malloc(rows * cols * sizeof(double));
 	for(int i = 0; i < rows * cols; ++i) {
-		Xedges[i] = 0.0;
+		Yedges[i] = 0.0;
 	}
 
     // initialize prewitt kernels
