@@ -1,0 +1,31 @@
+################################################################################
+#  Stencil Pattern
+################################################################################
+
+The stencil pattern operates on tiles of elements within a dataset.
+
+################################################################################
+#  Problem Statement
+################################################################################
+
+OSNAP is investigating computer vision to aid in detection and classification of UFOs. One of the common first steps for computer vision is to compute edges. Counter intuitively, we get better edges if the image is blurred before applying a gradient filter.
+
+You have been provided code for a serial gaussian blur filter and code for Prewitt kernels to help highlight edges. Please improve the performance using parallelism and add the Prewitt gradient filters to the image processing.
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Check out the repository onto WOPR, ACISS, or mist
+
+git pull <teacher repo remote> master
+
+2. Run the Makefile and look at the source code and output of the serial program.
+
+3. Write a parallel version of the program in Cilk, TBB, and OpenMP.
+
+4. Update the Makefile entries for the other three build targets with compilation commands for source files.
+
+5. Integrate the Prewitt kernels into one or all of your implementations so that you generate output highlighting the edges (see the example in the slides for the OSNAP logo).
+
+6. Commit the source files and updated Makefile to your repository.
