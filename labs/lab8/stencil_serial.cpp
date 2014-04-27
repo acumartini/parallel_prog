@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <omp.h>
 
 using namespace cv;
 
@@ -54,6 +55,54 @@ void prewittY_kernel(const int rows, const int cols, double * const kernel) {
         }
 }
 
+void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pixel * const out)  {
+	double Xkernel[3*3], Ykernel[3*3];
+    //double outIntensity[rows*cols];
+    
+    // initialize edge arrays    
+	double *Xedges = (double *) malloc(rows * cols * sizeof(double));
+    for(int i = 0; i < rows * cols; ++i) {
+		Xedges[i] = 0.0;
+	}
+	double *Yedges = (double *) malloc(rows * cols * sizeof(double));
+	for(int i = 0; i < rows * cols; ++i) {
+		Yedges[i] = 0.0;
+	}
+
+    // initialize prewitt kernels
+    prewittX_kernel( 3, 3, Xkernel );
+    prewittY_kernel( 3, 3, Ykernel );
+
+    // compute prewitt kernel gradients for each pixel in the blurred array and populate output array in grayscale
+    for(int i = 0; i < rows; ++i) {
+	    // #pragma omp parallel for private( i )
+		for(int j = 0; j < cols; ++j) {
+			const int out_offset = i + (j*rows);
+			// For each pixel in the stencil space, compute the X/Y gradient using the prewitt kernels
+			for(int x = i - 1, kx = 0; x <= i + 1; ++x, ++kx) {
+				for(int y = j - 1, ky = 0; y <= j + 1; ++y, ++ky) {
+					if(x >= 0 && x < rows && y >= 0 && y < cols) {
+						const int blurred_offset = x + (y*rows);
+						const int k_offset = kx + (ky*3);
+                        double intensity = (blurred[blurred_offset].red + blurred[blurred_offset].green + blurred[blurred_offset].blue)/3.0;
+						Xedges[out_offset] += Xkernel[k_offset] * intensity;
+                        Yedges[out_offset] += Ykernel[k_offset] * intensity;
+					}
+				}
+			}
+            // compute euclidean distance between computed prewitt gradients to get a grayscale pixel intensity
+            double outIntensity = sqrt( Xedges[out_offset]*Xedges[out_offset] + Yedges[out_offset]*Yedges[out_offset] );
+            out[out_offset].red = outIntensity;
+            out[out_offset].green = outIntensity;
+            out[out_offset].blue = outIntensity;
+		}
+	}
+
+    // free gradient storage
+    free( Xedges );
+    free( Yedges );
+}
+
 /*
  * The gaussian kernel provides a stencil for blurring images based on a 
  * normal distribution
@@ -63,6 +112,7 @@ void gaussian_kernel(const int rows, const int cols, const double stddev, double
 	const double g_denom = M_PI * denom;
 	const double g_denom_recip = (1.0/g_denom);
 	double sum = 0.0;
+
 	for(int i = 0; i < rows; ++i) {
 		for(int j = 0; j < cols; ++j) {
 			const double row_dist = i - (rows/2);
@@ -106,11 +156,12 @@ void apply_stencil(const int radius, const double stddev, const int rows, const 
 }
 
 int main( int argc, char* argv[] ) {
+    double start, end;
 
 	if(argc != 2) {
 		std::cerr << "Usage: " << argv[0] << " imageName\n";
 		return 1;
-	}
+	}    
 
 	// Read image
 	Mat image;
@@ -120,6 +171,8 @@ int main( int argc, char* argv[] ) {
 		return -1;
 	}
 	
+    start = omp_get_wtime();
+
 	// Get image into C array of doubles for processing
 	const int rows = image.rows;
 	const int cols = image.cols;
@@ -131,16 +184,28 @@ int main( int argc, char* argv[] ) {
 		}
 	}
 	
-	// Create output array
-	pixel * outPixels = (pixel *) malloc(rows * cols * sizeof(pixel));
+	// Create output arrays
+	pixel * outPixels1 = (pixel *) malloc(rows * cols * sizeof(pixel));
 	for(int i = 0; i < rows * cols; ++i) {
-		outPixels[i].red = 0.0;
-		outPixels[i].green = 0.0;
-		outPixels[i].blue = 0.0;
+		outPixels1[i].red = 0.0;
+		outPixels1[i].green = 0.0;
+		outPixels1[i].blue = 0.0;
 	}
-	
+	pixel * outPixels2 = (pixel *) malloc(rows * cols * sizeof(pixel));
+	for(int i = 0; i < rows * cols; ++i) {
+		outPixels2[i].red = 0.0;
+		outPixels2[i].green = 0.0;
+		outPixels2[i].blue = 0.0;
+	}	
+
 	// Do the stencil
-	apply_stencil(3, 32.0, rows, cols, imagePixels, outPixels);
+	apply_stencil(3, 32.0, rows, cols, imagePixels, outPixels1);
+    
+    // Apply grayscale processing
+    apply_prewittKs(rows, cols, outPixels1, outPixels2);
+
+    end = omp_get_wtime();
+    printf( "ptime = %lf\n", end - start );
 	
 	// Create an output image (same size as input)
 	Mat dest(rows, cols, CV_8UC3);
@@ -148,9 +213,9 @@ int main( int argc, char* argv[] ) {
 	for(int i = 0; i < rows; ++i) {
 		for(int j = 0; j < cols; ++j) {
 			const size_t offset = i + (j*rows);
-			dest.at<Vec3b>(i, j) = Vec3b(floor(outPixels[offset].red * 255.0),
-										 floor(outPixels[offset].green * 255.0),
-										 floor(outPixels[offset].blue * 255.0));
+			dest.at<Vec3b>(i, j) = Vec3b(floor(outPixels2[offset].red * 255.0),
+										 floor(outPixels2[offset].green * 255.0),
+										 floor(outPixels2[offset].blue * 255.0));
 		}
 	}
 	
@@ -158,6 +223,12 @@ int main( int argc, char* argv[] ) {
 	
 	
 	free(imagePixels);
-	free(outPixels);
+	free(outPixels1);
+	free(outPixels2);
 	return 0;
 }
+
+
+
+
+
