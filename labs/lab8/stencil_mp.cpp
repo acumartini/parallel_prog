@@ -78,7 +78,7 @@ void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pix
     // compute prewitt kernel gradients for each pixel in the blurred array and populate output array in grayscale
 	#pragma omp parallel for 
     for(int i = 0; i < rows; ++i) {
-	    // #pragma omp parallel for private( i )
+	    #pragma omp parallel for
 		for(int j = 0; j < cols; ++j) {
 			const int out_offset = i + (j*rows);
 			// For each pixel in the stencil space, compute the X/Y gradient using the prewitt kernels
@@ -116,9 +116,9 @@ void gaussian_kernel(const int rows, const int cols, const double stddev, double
 	const double g_denom_recip = (1.0/g_denom);
 	double sum = 0.0;
 
-    #pragma omp parallel for // shared( rows, cols, stddev, kernel, denom, g_denom, g_denom_recip, sum )
+    // #pragma omp parallel for
 	for(int i = 0; i < rows; ++i) {
-	    #pragma omp parallel for private( i )
+	    // #pragma omp parallel for
 		for(int j = 0; j < cols; ++j) {
 			const double row_dist = i - (rows/2);
 			const double col_dist = j - (cols/2);
@@ -130,9 +130,9 @@ void gaussian_kernel(const int rows, const int cols, const double stddev, double
 	}
 	// Normalize
 	const double recip_sum = 1.0 / sum;
-	#pragma omp parallel for // shared( rows, cols, recip_sum, kernel )
+	#pragma omp parallel for
 	for(int i = 0; i < rows; ++i) {
-	    #pragma omp parallel for private( i )
+	    #pragma omp parallel for
 		for(int j = 0; j < cols; ++j) {
 			kernel[i + (j*rows)] *= recip_sum;
 		}		
@@ -143,7 +143,10 @@ void apply_stencil(const int radius, const double stddev, const int rows, const 
 	const int dim = radius*2+1;
 	double kernel[dim*dim];
 	gaussian_kernel(dim, dim, stddev, kernel);
+	
+    #pragma omp parallel for
 	for(int i = 0; i < rows; ++i) {
+	    #pragma omp parallel for
 		for(int j = 0; j < cols; ++j) {
 			const int out_offset = i + (j*rows);
 			// For each pixel, do the stencil
@@ -186,7 +189,7 @@ int main( int argc, char* argv[] ) {
 	pixel * imagePixels = (pixel *) malloc(rows * cols * sizeof(pixel));
 	#pragma omp parallel for
 	for(int i = 0; i < rows; ++i) {
-	    #pragma omp parallel for private( i )
+	    #pragma omp parallel for
 		for(int j = 0; j < cols; ++j) {
 			Vec3b p = image.at<Vec3b>(i, j);
 			imagePixels[i + (j*rows)] = pixel(p[0]/255.0,p[1]/255.0,p[2]/255.0);
@@ -214,14 +217,13 @@ int main( int argc, char* argv[] ) {
     
     // Apply grayscale processing
     apply_prewittKs(rows, cols, outPixels1, outPixels2);
-
-    end = omp_get_wtime();
-    printf( "ptime = %lf\n", end - start );
 	
 	// Create an output image (same size as input)
 	Mat dest(rows, cols, CV_8UC3);
 	// Copy C array back into image for output
+	#pragma omp parallel for
 	for(int i = 0; i < rows; ++i) {
+	    #pragma omp parallel for
 		for(int j = 0; j < cols; ++j) {
 			const size_t offset = i + (j*rows);
 			dest.at<Vec3b>(i, j) = Vec3b(floor(outPixels2[offset].red * 255.0),
@@ -232,6 +234,8 @@ int main( int argc, char* argv[] ) {
 	
 	imwrite("out.jpg", dest);
 	
+    end = omp_get_wtime();
+    printf( "ptime = %lf\n", end - start );
 	
 	free(imagePixels);
 	free(outPixels1);

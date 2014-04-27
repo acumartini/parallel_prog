@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <omp.h>
 
 using namespace cv;
 
@@ -61,7 +60,7 @@ void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pix
     
     // initialize edge arrays    
 	double *Xedges = (double *) malloc(rows * cols * sizeof(double));
-    for(int i = 0; i < rows * cols; ++i) {
+	for(int i = 0; i < rows * cols; ++i) {
 		Xedges[i] = 0.0;
 	}
 	double *Yedges = (double *) malloc(rows * cols * sizeof(double));
@@ -74,8 +73,7 @@ void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pix
     prewittY_kernel( 3, 3, Ykernel );
 
     // compute prewitt kernel gradients for each pixel in the blurred array and populate output array in grayscale
-    for(int i = 0; i < rows; ++i) {
-	    // #pragma omp parallel for private( i )
+	for(int i = 0; i < rows; ++i) {
 		for(int j = 0; j < cols; ++j) {
 			const int out_offset = i + (j*rows);
 			// For each pixel in the stencil space, compute the X/Y gradient using the prewitt kernels
@@ -97,10 +95,6 @@ void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pix
             out[out_offset].blue = outIntensity;
 		}
 	}
-
-    // free gradient storage
-    free( Xedges );
-    free( Yedges );
 }
 
 /*
@@ -112,7 +106,6 @@ void gaussian_kernel(const int rows, const int cols, const double stddev, double
 	const double g_denom = M_PI * denom;
 	const double g_denom_recip = (1.0/g_denom);
 	double sum = 0.0;
-
 	for(int i = 0; i < rows; ++i) {
 		for(int j = 0; j < cols; ++j) {
 			const double row_dist = i - (rows/2);
@@ -156,12 +149,11 @@ void apply_stencil(const int radius, const double stddev, const int rows, const 
 }
 
 int main( int argc, char* argv[] ) {
-    double start, end;
 
 	if(argc != 2) {
 		std::cerr << "Usage: " << argv[0] << " imageName\n";
 		return 1;
-	}    
+	}
 
 	// Read image
 	Mat image;
@@ -171,8 +163,6 @@ int main( int argc, char* argv[] ) {
 		return -1;
 	}
 	
-    start = omp_get_wtime();
-
 	// Get image into C array of doubles for processing
 	const int rows = image.rows;
 	const int cols = image.cols;
@@ -196,14 +186,14 @@ int main( int argc, char* argv[] ) {
 		outPixels2[i].red = 0.0;
 		outPixels2[i].green = 0.0;
 		outPixels2[i].blue = 0.0;
-	}	
-
+	}
+	
 	// Do the stencil
 	apply_stencil(3, 32.0, rows, cols, imagePixels, outPixels1);
     
     // Apply grayscale processing
     apply_prewittKs(rows, cols, outPixels1, outPixels2);
-
+	
 	// Create an output image (same size as input)
 	Mat dest(rows, cols, CV_8UC3);
 	// Copy C array back into image for output
@@ -218,16 +208,9 @@ int main( int argc, char* argv[] ) {
 	
 	imwrite("out.jpg", dest);
 	
-    end = omp_get_wtime();
-    printf( "ptime = %lf\n", end - start );
 	
 	free(imagePixels);
 	free(outPixels1);
 	free(outPixels2);
 	return 0;
 }
-
-
-
-
-
