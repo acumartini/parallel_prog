@@ -62,11 +62,9 @@ void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pix
     
     // initialize edge arrays    
 	double *Xedges = (double *) malloc(rows * cols * sizeof(double));
+	double *Yedges = (double *) malloc(rows * cols * sizeof(double));
     cilk_for(int i = 0; i < rows * cols; ++i) {
 		Xedges[i] = 0.0;
-	}
-	double *Yedges = (double *) malloc(rows * cols * sizeof(double));
-	cilk_for(int i = 0; i < rows * cols; ++i) {
 		Yedges[i] = 0.0;
 	}
 
@@ -186,24 +184,22 @@ int main( int argc, char* argv[] ) {
 	}
 	
 	// Create output arrays
-	pixel * outPixels1 = (pixel *) malloc(rows * cols * sizeof(pixel));
+	pixel * blurred = (pixel *) malloc(rows * cols * sizeof(pixel));
+	pixel * outPixels = (pixel *) malloc(rows * cols * sizeof(pixel));
 	cilk_for(int i = 0; i < rows * cols; ++i) {
-		outPixels1[i].red = 0.0;
-		outPixels1[i].green = 0.0;
-		outPixels1[i].blue = 0.0;
+		blurred[i].red = 0.0;
+		blurred[i].green = 0.0;
+		blurred[i].blue = 0.0;
+		outPixels[i].red = 0.0;
+		outPixels[i].green = 0.0;
+		outPixels[i].blue = 0.0;
 	}
-	pixel * outPixels2 = (pixel *) malloc(rows * cols * sizeof(pixel));
-	cilk_for(int i = 0; i < rows * cols; ++i) {
-		outPixels2[i].red = 0.0;
-		outPixels2[i].green = 0.0;
-		outPixels2[i].blue = 0.0;
-	}	
 
 	// Do the stencil
-	apply_stencil(3, 32.0, rows, cols, imagePixels, outPixels1);
+	apply_stencil(3, 32.0, rows, cols, imagePixels, blurred);
     
     // Apply grayscale processing
-    apply_prewittKs(rows, cols, outPixels1, outPixels2);
+    apply_prewittKs(rows, cols, blurred, outPixels);
 	
 	// Create an output image (same size as input)
 	Mat dest(rows, cols, CV_8UC3);
@@ -211,9 +207,9 @@ int main( int argc, char* argv[] ) {
 	cilk_for(int i = 0; i < rows; ++i) {
 		cilk_for(int j = 0; j < cols; ++j) {
 			const size_t offset = i + (j*rows);
-			dest.at<Vec3b>(i, j) = Vec3b(floor(outPixels2[offset].red * 255.0),
-										 floor(outPixels2[offset].green * 255.0),
-										 floor(outPixels2[offset].blue * 255.0));
+			dest.at<Vec3b>(i, j) = Vec3b(floor(outPixels[offset].red * 255.0),
+										 floor(outPixels[offset].green * 255.0),
+										 floor(outPixels[offset].blue * 255.0));
 		}
 	}
 	
@@ -223,8 +219,8 @@ int main( int argc, char* argv[] ) {
     printf( "ptime = %lf\n", end - start );
 	
 	free(imagePixels);
-	free(outPixels1);
-	free(outPixels2);
+	free(blurred);
+	free(outPixels);
 	return 0;
 }
 

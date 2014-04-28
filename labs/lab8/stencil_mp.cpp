@@ -57,17 +57,13 @@ void prewittY_kernel(const int rows, const int cols, double * const kernel) {
 
 void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pixel * const out)  {
 	double Xkernel[3*3], Ykernel[3*3];
-    //double outIntensity[rows*cols];
     
     // initialize edge arrays    
 	double *Xedges = (double *) malloc(rows * cols * sizeof(double));
+	double *Yedges = (double *) malloc(rows * cols * sizeof(double));
 	#pragma omp parallel for
     for(int i = 0; i < rows * cols; ++i) {
 		Xedges[i] = 0.0;
-	}
-	double *Yedges = (double *) malloc(rows * cols * sizeof(double));
-	#pragma omp parallel for
-	for(int i = 0; i < rows * cols; ++i) {
 		Yedges[i] = 0.0;
 	}
 
@@ -198,19 +194,16 @@ int main( int argc, char* argv[] ) {
 	
 	// Create output arrays
 	pixel * blurred = (pixel *) malloc(rows * cols * sizeof(pixel));
+	pixel * outPixels = (pixel *) malloc(rows * cols * sizeof(pixel));
 	#pragma omp parallel for
 	for(int i = 0; i < rows * cols; ++i) {
 		blurred[i].red = 0.0;
 		blurred[i].green = 0.0;
 		blurred[i].blue = 0.0;
-	}
-	pixel * outPixels = (pixel *) malloc(rows * cols * sizeof(pixel));
-	#pragma omp parallel for
-	for(int i = 0; i < rows * cols; ++i) {
 		outPixels[i].red = 0.0;
 		outPixels[i].green = 0.0;
 		outPixels[i].blue = 0.0;
-	}	
+	}
 
 	// Do the stencil
 	apply_stencil(3, 32.0, rows, cols, imagePixels, blurred);
