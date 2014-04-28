@@ -3,6 +3,9 @@
 #include <cstdint>
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <cilk/cilk.h>
+#include <cilk/reducer_opadd.h>
+#include <omp.h>
 
 using namespace cv;
 
@@ -56,15 +59,14 @@ void prewittY_kernel(const int rows, const int cols, double * const kernel) {
 
 void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pixel * const out)  {
 	double Xkernel[3*3], Ykernel[3*3];
-    //double outIntensity[rows*cols];
     
     // initialize edge arrays    
 	double *Xedges = (double *) malloc(rows * cols * sizeof(double));
-	for(int i = 0; i < rows * cols; ++i) {
+    cilk_for(int i = 0; i < rows * cols; ++i) {
 		Xedges[i] = 0.0;
 	}
 	double *Yedges = (double *) malloc(rows * cols * sizeof(double));
-	for(int i = 0; i < rows * cols; ++i) {
+	cilk_for(int i = 0; i < rows * cols; ++i) {
 		Yedges[i] = 0.0;
 	}
 
@@ -73,8 +75,8 @@ void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pix
     prewittY_kernel( 3, 3, Ykernel );
 
     // compute prewitt kernel gradients for each pixel in the blurred array and populate output array in grayscale
-	for(int i = 0; i < rows; ++i) {
-		for(int j = 0; j < cols; ++j) {
+    cilk_for(int i = 0; i < rows; ++i) {
+		cilk_for(int j = 0; j < cols; ++j) {
 			const int out_offset = i + (j*rows);
 			// For each pixel in the stencil space, compute the X/Y gradient using the prewitt kernels
 			for(int x = i - 1, kx = 0; x <= i + 1; ++x, ++kx) {
@@ -95,6 +97,10 @@ void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pix
             out[out_offset].blue = outIntensity;
 		}
 	}
+
+    // free gradient storage
+    free( Xedges );
+    free( Yedges );
 }
 
 /*
@@ -105,9 +111,10 @@ void gaussian_kernel(const int rows, const int cols, const double stddev, double
 	const double denom = 2.0 * stddev * stddev;
 	const double g_denom = M_PI * denom;
 	const double g_denom_recip = (1.0/g_denom);
-	double sum = 0.0;
-	for(int i = 0; i < rows; ++i) {
-		for(int j = 0; j < cols; ++j) {
+	
+    cilk::reducer_opadd<double> sum( 0.0 );
+	cilk_for(int i = 0; i < rows; ++i) {
+		cilk_for(int j = 0; j < cols; ++j) {
 			const double row_dist = i - (rows/2);
 			const double col_dist = j - (cols/2);
 			const double dist_sq = (row_dist * row_dist) + (col_dist * col_dist);
@@ -117,9 +124,9 @@ void gaussian_kernel(const int rows, const int cols, const double stddev, double
 		}
 	}
 	// Normalize
-	const double recip_sum = 1.0 / sum;
-	for(int i = 0; i < rows; ++i) {
-		for(int j = 0; j < cols; ++j) {
+	const double recip_sum = 1.0 / sum.get_value();
+	cilk_for(int i = 0; i < rows; ++i) {
+		cilk_for(int j = 0; j < cols; ++j) {
 			kernel[i + (j*rows)] *= recip_sum;
 		}		
 	}
@@ -129,8 +136,9 @@ void apply_stencil(const int radius, const double stddev, const int rows, const 
 	const int dim = radius*2+1;
 	double kernel[dim*dim];
 	gaussian_kernel(dim, dim, stddev, kernel);
-	for(int i = 0; i < rows; ++i) {
-		for(int j = 0; j < cols; ++j) {
+	
+	cilk_for(int i = 0; i < rows; ++i) {
+		cilk_for(int j = 0; j < cols; ++j) {
 			const int out_offset = i + (j*rows);
 			// For each pixel, do the stencil
 			for(int x = i - radius, kx = 0; x <= i + radius; ++x, ++kx) {
@@ -149,11 +157,12 @@ void apply_stencil(const int radius, const double stddev, const int rows, const 
 }
 
 int main( int argc, char* argv[] ) {
+    double start, end;
 
 	if(argc != 2) {
 		std::cerr << "Usage: " << argv[0] << " imageName\n";
 		return 1;
-	}
+	}    
 
 	// Read image
 	Mat image;
@@ -163,12 +172,14 @@ int main( int argc, char* argv[] ) {
 		return -1;
 	}
 	
+    start = omp_get_wtime();
+
 	// Get image into C array of doubles for processing
 	const int rows = image.rows;
 	const int cols = image.cols;
 	pixel * imagePixels = (pixel *) malloc(rows * cols * sizeof(pixel));
-	for(int i = 0; i < rows; ++i) {
-		for(int j = 0; j < cols; ++j) {
+	cilk_for(int i = 0; i < rows; ++i) {
+		cilk_for(int j = 0; j < cols; ++j) {
 			Vec3b p = image.at<Vec3b>(i, j);
 			imagePixels[i + (j*rows)] = pixel(p[0]/255.0,p[1]/255.0,p[2]/255.0);
 		}
@@ -176,18 +187,18 @@ int main( int argc, char* argv[] ) {
 	
 	// Create output arrays
 	pixel * outPixels1 = (pixel *) malloc(rows * cols * sizeof(pixel));
-	for(int i = 0; i < rows * cols; ++i) {
+	cilk_for(int i = 0; i < rows * cols; ++i) {
 		outPixels1[i].red = 0.0;
 		outPixels1[i].green = 0.0;
 		outPixels1[i].blue = 0.0;
 	}
 	pixel * outPixels2 = (pixel *) malloc(rows * cols * sizeof(pixel));
-	for(int i = 0; i < rows * cols; ++i) {
+	cilk_for(int i = 0; i < rows * cols; ++i) {
 		outPixels2[i].red = 0.0;
 		outPixels2[i].green = 0.0;
 		outPixels2[i].blue = 0.0;
-	}
-	
+	}	
+
 	// Do the stencil
 	apply_stencil(3, 32.0, rows, cols, imagePixels, outPixels1);
     
@@ -197,8 +208,8 @@ int main( int argc, char* argv[] ) {
 	// Create an output image (same size as input)
 	Mat dest(rows, cols, CV_8UC3);
 	// Copy C array back into image for output
-	for(int i = 0; i < rows; ++i) {
-		for(int j = 0; j < cols; ++j) {
+	cilk_for(int i = 0; i < rows; ++i) {
+		cilk_for(int j = 0; j < cols; ++j) {
 			const size_t offset = i + (j*rows);
 			dest.at<Vec3b>(i, j) = Vec3b(floor(outPixels2[offset].red * 255.0),
 										 floor(outPixels2[offset].green * 255.0),
@@ -208,9 +219,16 @@ int main( int argc, char* argv[] ) {
 	
 	imwrite("out.jpg", dest);
 	
+    end = omp_get_wtime();
+    printf( "ptime = %lf\n", end - start );
 	
 	free(imagePixels);
 	free(outPixels1);
 	free(outPixels2);
 	return 0;
 }
+
+
+
+
+
