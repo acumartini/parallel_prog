@@ -116,9 +116,9 @@ void gaussian_kernel(const int rows, const int cols, const double stddev, double
 	const double g_denom_recip = (1.0/g_denom);
 	double sum = 0.0;
 
-    // #pragma omp parallel for
+    #pragma omp parallel for reduction(+:sum) 
 	for(int i = 0; i < rows; ++i) {
-	    // #pragma omp parallel for
+	    #pragma omp parallel for
 		for(int j = 0; j < cols; ++j) {
 			const double row_dist = i - (rows/2);
 			const double col_dist = j - (cols/2);
