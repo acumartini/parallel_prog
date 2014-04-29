@@ -79,13 +79,13 @@ void apply_prewittKs (const int rows, const int cols, pixel * const blurred, pix
 
     // compute prewitt kernel gradients for each pixel in the blurred array and populate output array in grayscale
     tbb::parallel_for (
-        tbb::blocked_range<int> ( 0, rows ),
+        tbb::blocked_range<int> ( 0, cols ),
         [=](tbb::blocked_range<int> r) { 
-            for( int i = r.begin(); i < r.end(); ++i ) {
+            for( int j = r.begin(); j < r.end(); ++j ) {
                 tbb::parallel_for (
-                    tbb::blocked_range<int> ( 0, cols ),
+                    tbb::blocked_range<int> ( 0, rows ),
                     [=](tbb::blocked_range<int> r2) { 
-                        for( int j = r2.begin(); j < r2.end(); ++j ) {
+                        for( int i = r2.begin(); i < r2.end(); ++i ) {
                             const int out_offset = i + (j*rows);
                             // For each pixel in the stencil space, compute the X/Y gradient using the prewitt kernels
                             for(int x = i - 1, kx = 0; x <= i + 1; ++x, ++kx) {
@@ -124,14 +124,14 @@ void gaussian_kernel(const int rows, const int cols, const double stddev, double
 	const double g_denom_recip = (1.0/g_denom);
 	
     double sum = tbb::parallel_reduce(
-        tbb::blocked_range<int>( 0, rows ),
+        tbb::blocked_range<int>( 0, cols ),
         double( 0.0 ),
         [=]( const tbb::blocked_range<int>& r, double in )->double {
-            for( int i=r.begin(); i!=r.end(); ++i ) {
+            for( int j=r.begin(); j!=r.end(); ++j ) {
                 tbb::parallel_for (
-                    tbb::blocked_range<int> ( 0, cols ),
+                    tbb::blocked_range<int> ( 0, rows ),
                     [=, &in]( tbb::blocked_range<int> r2 ) { 
-                        for( int j = r2.begin(); j < r2.end(); ++j ) {
+                        for( int i = r2.begin(); i < r2.end(); ++i ) {
                             const double row_dist = i - (rows/2);
                             const double col_dist = j - (cols/2);
                             const double dist_sq = (row_dist * row_dist) + (col_dist * col_dist);
@@ -149,13 +149,13 @@ void gaussian_kernel(const int rows, const int cols, const double stddev, double
     // Normalize
 	const double recip_sum = 1.0 / sum;
     tbb::parallel_for (
-        tbb::blocked_range<int> ( 0, rows ),
+        tbb::blocked_range<int> ( 0, cols ),
         [=](tbb::blocked_range<int> r) { 
-            for( int i = r.begin(); i < r.end(); ++i ) {
+            for( int j = r.begin(); j < r.end(); ++j ) {
                 tbb::parallel_for (
-                    tbb::blocked_range<int> ( 0, cols ),
+                    tbb::blocked_range<int> ( 0, rows ),
                     [=](tbb::blocked_range<int> r2) { 
-                        for( int j = r2.begin(); j < r2.end(); ++j ) {
+                        for( int i = r2.begin(); i < r2.end(); ++i ) {
 			                kernel[i + (j*rows)] *= recip_sum;
                         }
                     });
@@ -169,13 +169,13 @@ void apply_stencil(const int radius, const double stddev, const int rows, const 
 	gaussian_kernel(dim, dim, stddev, kernel);
 	
     tbb::parallel_for (
-        tbb::blocked_range<int> ( 0, rows ),
+        tbb::blocked_range<int> ( 0, cols ),
         [=, &kernel](tbb::blocked_range<int> r) { 
-            for( int i = r.begin(); i < r.end(); ++i ) {
+            for( int j = r.begin(); j < r.end(); ++j ) {
                 tbb::parallel_for (
-                    tbb::blocked_range<int> ( 0, cols ),
+                    tbb::blocked_range<int> ( 0, rows ),
                     [=, &kernel](tbb::blocked_range<int> r2) { 
-                        for( int j = r2.begin(); j < r2.end(); ++j ) {
+                        for( int i = r2.begin(); i < r2.end(); ++i ) {
                             const int out_offset = i + (j*rows);
                             // For each pixel, do the stencil
                             for(int x = i - radius, kx = 0; x <= i + radius; ++x, ++kx) {
@@ -218,13 +218,13 @@ int main( int argc, char* argv[] ) {
 	const int cols = image.cols;
 	pixel * imagePixels = (pixel *) malloc(rows * cols * sizeof(pixel));
     tbb::parallel_for (
-        tbb::blocked_range<int> ( 0, rows ),
+        tbb::blocked_range<int> ( 0, cols ),
         [=](tbb::blocked_range<int> r) { 
-            for( int i = r.begin(); i < r.end(); ++i ) {
+            for( int j = r.begin(); j < r.end(); ++j ) {
                 tbb::parallel_for (
-                    tbb::blocked_range<int> ( 0, cols ),
+                    tbb::blocked_range<int> ( 0, rows ),
                     [=](tbb::blocked_range<int> r2) { 
-                        for( int j = r2.begin(); j < r2.end(); ++j ) {
+                        for( int i = r2.begin(); i < r2.end(); ++i ) {
                             Vec3b p = image.at<Vec3b>(i, j);
                             imagePixels[i + (j*rows)] = pixel(p[0]/255.0,p[1]/255.0,p[2]/255.0);
                         }
@@ -258,13 +258,13 @@ int main( int argc, char* argv[] ) {
 	Mat dest(rows, cols, CV_8UC3);
 	// Copy C array back into image for output
     tbb::parallel_for (
-        tbb::blocked_range<int> ( 0, rows ),
+        tbb::blocked_range<int> ( 0, cols ),
         [=, &dest](tbb::blocked_range<int> r) { 
-            for( int i = r.begin(); i < r.end(); ++i ) {
+            for( int j = r.begin(); j < r.end(); ++j ) {
                 tbb::parallel_for (
-                    tbb::blocked_range<int> ( 0, cols ),
+                    tbb::blocked_range<int> ( 0, rows ),
                     [=, &dest](tbb::blocked_range<int> r2) { 
-                        for( int j = r2.begin(); j < r2.end(); ++j ) {
+                        for( int i = r2.begin(); i < r2.end(); ++i ) {
                             const size_t offset = i + (j*rows);
                             dest.at<Vec3b>(i, j) = Vec3b(floor(outPixels[offset].red * 255.0),
                                                          floor(outPixels[offset].green * 255.0),
