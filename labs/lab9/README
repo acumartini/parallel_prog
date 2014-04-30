@@ -1,0 +1,33 @@
+################################################################################
+#  Fork/Join Pattern
+################################################################################
+
+The Fork/Join pattern is a flexible pattern for expressing parallelism. Where there is more work to be done, fork off a thread or task to do it in parallel. When the task is done, the result can be joined into a result.
+
+################################################################################
+#  Problem Statement
+################################################################################
+
+OSNAP is investigating faster than light travel using a ring shaped device and exotic particles. You have been provided a serial simulation implementation that we would like to have accelerated.
+
+The "Carter particles" are injected into a field and move randomly (weighted based on their location in the field). The Carter particles will spontaniously divide within the field; the probablity is also given by a distribution related to distance.
+
+Care has been taken in the code so that the random number generation is deterministic (ie. Given the same input parameters all versions should generate exactly the same output). Your optimized versions should maintain this property.
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Check out the repository onto WOPR, ACISS, or mist
+
+git pull <teacher repo remote> master
+
+2. Run the Makefile and look at the source code and output of the serial program.
+
+3. Write a parallel versions of the program in Cilk, TBB, and OpenMP.
+
+4. Update the Makefile entries for the other three build targets with compilation commands for source files.
+
+5. Optimize performance
+
+6. Commit the source files and updated Makefile to your repository.
