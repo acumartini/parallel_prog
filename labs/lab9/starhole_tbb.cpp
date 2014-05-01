@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
+#include <tbb/tbb.h>
+#include "tbb/task_group.h"
 
 using namespace cv;
 
@@ -24,10 +26,13 @@ static int sim_steps;
 
 // Returns the total number of particles descending from this call
 // and increments the count at the right location
-int walker(long int seed, int x, int y, int stepsremaining) {
+int walker(long int seed, int x, int y, int stepsremaining ) {
     struct drand48_data seedbuf;
     srand48_r(seed, &seedbuf);
-    int particles = 1;
+    
+    tbb::atomic<int> particles = 1;
+    tbb::task_group g;
+    
     for( ; stepsremaining>0 ; stepsremaining-- ) {
         
         // Does the Carter particle split? If so, start the walk for the new one
@@ -35,7 +40,10 @@ int walker(long int seed, int x, int y, int stepsremaining) {
             //printf("spliting!\n");
             long int newseed;
             lrand48_r(&seedbuf, &newseed);
-            particles += walker(seed + newseed, x, y, stepsremaining-1);
+            int parts = 0;
+            g.run( [=,&parts]{ parts=walker(seed + newseed, x, y, stepsremaining-1); });
+            g.wait();
+            particles.fetch_and_add(parts);
         }
         
         // Make the particle walk?
@@ -45,6 +53,7 @@ int walker(long int seed, int x, int y, int stepsremaining) {
     // record the final location
     outArea[toOffset(x,y,radius)] += 1;
     
+    g.wait();
     return particles;
 }
 
