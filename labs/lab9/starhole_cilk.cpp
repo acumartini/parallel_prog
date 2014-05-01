@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
+#include <cilk/cilk.h>
+#include <cilk/reducer_opadd.h>
 
 using namespace cv;
 
@@ -27,15 +29,17 @@ static int sim_steps;
 int walker(long int seed, int x, int y, int stepsremaining) {
     struct drand48_data seedbuf;
     srand48_r(seed, &seedbuf);
-    int particles = 1;
-    for( ; stepsremaining>0 ; stepsremaining-- ) {
+    cilk::reducer_opadd<int> particles( 1 );
+    for ( ; stepsremaining>0 ; stepsremaining-- ) {
         
         // Does the Carter particle split? If so, start the walk for the new one
         if(doesSplit(&seedbuf, splitProb, x, y, radius)) {
             //printf("spliting!\n");
             long int newseed;
             lrand48_r(&seedbuf, &newseed);
-            particles += walker(seed + newseed, x, y, stepsremaining-1);
+            int parts = cilk_spawn walker(seed + newseed, x, y, stepsremaining-1);
+            cilk_sync;
+            particles += parts;
         }
         
         // Make the particle walk?
@@ -45,7 +49,8 @@ int walker(long int seed, int x, int y, int stepsremaining) {
     // record the final location
     outArea[toOffset(x,y,radius)] += 1;
     
-    return particles;
+    cilk_sync;
+    return particles.get_value();
 }
 
 int main(int argc, char** argv) {
