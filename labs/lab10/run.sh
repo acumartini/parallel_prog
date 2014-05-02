@@ -1,1 +1,1 @@
-./pipeline_serial /tmp/fusionvid/*
+./pipeline_tbb /tmp/fusionvid/*

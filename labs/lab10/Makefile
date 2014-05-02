@@ -1,35 +1,12 @@
-############################################################################
-# 
-# @file src/Makefile
-# @Author James Kress
-# @date 10/2/2013
-# @version 1.00
-# @copyright KressEnterprisesInternational - All Rights Reserved
-# @description This is the src makefile for BSplines
-#
-# $Id: Makefile 122 2014-01-22 00:07:00Z kirk $
-#
-############################################################################
+all: pipeline_serial pipeline_tbb
 
-prog:=pipeline_serial
-objs:=$(patsubst %.c,%.o,$(wildcard *.cpp))
-
-cc=icpc
-ccflags= -MMD -g -Wall
-ldflags= -lopencv_core -lopencv_highgui -lopencv_imgproc
-
-%.o: %.c
-	$(cc) $(ccflags) -c $<
-
-$(prog): $(objs)
-	$(cc) $(ccflags) -o $@ $^ $(ldflags)
+pipeline_tbb: pipeline_tbb.cpp
+	icpc -g -std=c++11 -o pipeline_tbb pipeline_tbb.cpp -Wall -Wextra -lopencv_core -lopencv_highgui -lopencv_imgproc -ltbb
 
 
-.PHONY: clean
+pipeline_serial: pipeline_serial.cpp
+	icpc -g -std=c++11 -o pipeline_serial pipeline_serial.cpp -Wall -Wextra -lopencv_core -lopencv_highgui -lopencv_imgproc
 
 clean:
-	rm -f garbleVideo *.o *.d counts* *.output *~ $(prog) 
-	
--include *.d
-
-# vim: set ts=4: #
+	rm -f *.o pipeline_serial pipeline_tbb	
+.PHONY: clean
