@@ -1,0 +1,31 @@
+################################################################################
+#  Pipeline Pattern
+################################################################################
+
+The pipeline pattern can help to run a workflow, with stages, in parallel. This can be benificial in online processing where data is being sent or recieved serially.
+
+################################################################################
+#  Problem Statement
+################################################################################
+
+OSNAP has intercepted a video signal of interest. We would like to view the signal in realtime however several filters must be applied. The provided serial implementation cannot keep up with the frame rate.
+
+Please modify using the pipeline pattern to increase the frame rate. The sample video frames are in /tmp/fusionvid on the NUCs in the lab.
+
+We only expect a TBB implementation as Cilk and OpenMP do not have built in constructions to express pipelines (Cilk will be getting pipelining in an upcoming version).
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Check out the repository onto WOPR, ACISS, or mist
+
+git pull <teacher repo remote> master
+
+2. Run the Makefile and look at the source code and output of the serial program.
+
+3. Write a parallel versions of the program in TBB.
+
+4. Update the Makefile entries for the build targets with compilation commands for source files.
+
+6. Commit the source files and updated Makefile to your repository.
