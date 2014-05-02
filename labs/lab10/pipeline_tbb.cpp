@@ -100,58 +100,60 @@ void debug()
 }
 void ungarbleVideo(char** imgList, int numImgs) 
 {
-	Mat frame, brightFrameReturn, contrastFrameReturn;
-	Mat pixelsFrameReturn, rotateFrameReturn;
+    int imgNum = 0;
     size_t ntoken = 4;
     
-   for(int imgNum=0;imgNum<numImgs;imgNum++){
-        tbb::parallel_pipeline (
-            ntoken,
-            tbb::make_filter<void,Mat>(
-                tbb::filter::serial_in_order,
-                [&]( tbb::flow_control& fc ) -> Mat {
-                    Mat frame = imread(imgList[imgNum],CV_LOAD_IMAGE_COLOR);
-                    if (imgNum == numImgs) { fc.stop(); }
-                    return frame;
-                }
-            ) &
-            tbb::make_filter<Mat,Mat> (
-                tbb::filter::serial_in_order,
-                [&](Mat frame) -> Mat { 
-                    decreaseBrightnessFilter(frame, brightFrameReturn);
-                    return brightFrameReturn;
-                }
-            ) &
-            tbb::make_filter<Mat,Mat> (
-                tbb::filter::serial_in_order,
-                [&](Mat frame) -> Mat { 
-	                decreaseContrastFilter(frame, contrastFrameReturn);
-                    return contrastFrameReturn;
-                }
-            ) &
-            tbb::make_filter<Mat,Mat> (
-                tbb::filter::serial_in_order,
-                [&](Mat frame) -> Mat { 
-	                rearrangePixelsFilter(frame, pixelsFrameReturn);
-                    return pixelsFrameReturn;
-                }
-            ) &
-            tbb::make_filter<Mat,Mat> (
-                tbb::filter::serial_in_order,
-                [&](Mat frame) -> Mat { 
-	                rotateMatFilter(pixelsFrameReturn, rotateFrameReturn);
-                    return rotateFrameReturn;
-                }
-            ) &
-            tbb::make_filter<Mat,void> (
-                tbb::filter::serial_in_order,
-                [&](Mat frame) {
-                  imshow("Nuclear Fusion",pixelsFrameReturn);
-                  waitKey(1);
-                }
-            )
-        );
-   }
+    tbb::parallel_pipeline (
+        ntoken,
+        tbb::make_filter<void,Mat>(
+            tbb::filter::serial_in_order,
+            [&]( tbb::flow_control& fc ) -> Mat {
+                Mat pframe = imread(imgList[imgNum++],CV_LOAD_IMAGE_COLOR);
+                if (imgNum == numImgs) { fc.stop(); }
+                return pframe;
+            }
+        ) &
+        tbb::make_filter<Mat,Mat> (
+            tbb::filter::parallel,
+            [](Mat pframe) -> Mat { 
+                Mat filter_frame;
+                decreaseBrightnessFilter(pframe, filter_frame);
+                return filter_frame;
+            }
+        ) &
+        tbb::make_filter<Mat,Mat> (
+            tbb::filter::parallel,
+            [](Mat pframe) -> Mat { 
+                Mat filter_frame;
+                decreaseContrastFilter(pframe, filter_frame);
+                return filter_frame;
+            }
+        ) &
+        tbb::make_filter<Mat,Mat> (
+            tbb::filter::parallel,
+            [](Mat pframe) -> Mat { 
+                Mat filter_frame;
+                rearrangePixelsFilter(pframe, filter_frame);
+                return filter_frame;
+            }
+        ) &
+        tbb::make_filter<Mat,Mat> (
+            tbb::filter::parallel,
+            [](Mat pframe) -> Mat { 
+                Mat filter_frame;
+                rotateMatFilter(pframe, filter_frame);
+                return filter_frame;
+            }
+        ) &
+        tbb::make_filter<Mat,void> (
+            tbb::filter::serial_in_order,
+            [](Mat pframe) {
+              imshow("Nuclear Fusion",pframe);
+              waitKey(1);
+              return;
+            }
+        )
+    );
 }
 
 
