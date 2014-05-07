@@ -1,0 +1,25 @@
+################################################################################
+#  Concurrent Debugging
+################################################################################
+
+As you learned through writing programs that didn't do what they were supposed to, debugging parallel codes is hard.
+
+################################################################################
+#  Problem Statement
+################################################################################
+
+We have some broken programs. Use IDB to fix them
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Check out the repository onto WOPR, ACISS, or mist
+
+git pull <teacher repo remote> master
+
+2. Build the codes and run with IDB
+
+3. Fix the codes
+
+4. A note: you can absolutely solve this problem analytically. When the time when you need to solve something in IDB, you'll be thankful you learned to do it in IDB.
