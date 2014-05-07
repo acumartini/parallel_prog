@@ -13,7 +13,7 @@ class Init {
    void operator() ( const blocked_range<int>& range ) const {
       for ( int i = range.begin(); i!=range.end(); ++i){
          output[i]=i;
-         *((int*)(0))=2;
+         //*((int*)(0))=2;
       }
    }
 };

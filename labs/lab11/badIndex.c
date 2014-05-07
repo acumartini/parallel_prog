@@ -17,7 +17,7 @@ void scanGroup(int** vectorGroup)
 {
    int i=0;
    #pragma omp parallel for
-   for(i=0;i<=NUMVECTORS;i++)
+   for(i=0;i<NUMVECTORS;i++)
    {
       scan(vectorGroup[i]);
    }
