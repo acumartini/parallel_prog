@@ -1,0 +1,27 @@
+################################################################################
+#  MPI
+################################################################################
+
+MPI is a widely available tool to support executing a program across nodes in a cluster. You may want to try using MPI to allow for really large runs of your term project on ACISS or mist.
+
+################################################################################
+#  Problem Statement
+################################################################################
+
+Run the provided MPI programs to see how they work.
+
+mpi_ring.c passes messages from one rank to the next in ascending order. Modify mpi_ring.c to pass in descending order instead.
+
+################################################################################
+#  What to do
+################################################################################
+
+1. Check out the repository onto ACISS
+
+git pull <teacher repo remote> master
+
+2. Run the Makefile and look at the source code. You will need an interactive qsub session and to load an Intel 14 MPI ("qsub -I -q student" and "module load  mpi-tor/openmpi-1.7_intel-14" respectively).
+
+3. Modify mpi_ring.c so that the messages are passed in descending order.
+
+4. Commit the source files to your repository.
